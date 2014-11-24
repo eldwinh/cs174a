@@ -33,7 +33,7 @@ var specularProduct = mult(lightSpecular, materialSpecular);
 var shininess = 50;
 var lightPosition = vec3(0.0, 0.0, 0.0);
 
-var eye = vec3(0, 1.0, 1.8);
+var eye = vec3(0, 0.0, 1.8);
 var at = vec3(0, 0, 0);
 var up = vec3(0, 1, 0);
 
@@ -131,21 +131,21 @@ window.onload = function init()
 
 function Cube(points, normals){
     vertices = [
-        vec3(  .5,   .5, .5 ), //vertex 0 top right front
-        vec3(  .5,  -.5, .5 ), //vertex 1 bottom right front
-        vec3( -.5,  .5, .5 ), //vertex 2 front top left
-        vec3( -.5,  -.5, .5 ),  //vertex 3 front bottom left
-        vec3(  .5,   .5, -.5 ), //vertex 4 top back right
-        vec3(  .5,  -.5, -.5 ), //vertex 5 bottom back right
-        vec3( -.5,   .5, -.5 ), //vertex 6 left top back
-        vec3( -.5,  -.5, -.5 )  //vertex 7 left bottom back
+        vec3(  .0,   .2, .8 ), //vertex 0 top right front
+        vec3(  .15,  -.05, .8 ), //vertex 1 bottom right front
+        vec3( -.0,  .2, .8 ), //vertex 2 front top left
+        vec3( -.15,  -.05, .8 ),  //vertex 3 front bottom left
+        vec3(  .0,   .0, -.0 ), //vertex 4 top back right
+        vec3(  .0,  -.0, -.0 ), //vertex 5 bottom back right
+        vec3( -.0,   .0, -.0 ), //vertex 6 left top back
+        vec3( -.0,  -.0, -.0 )  //vertex 7 left bottom back
     ];
     Quad(vertices, points, normals, 0, 1, 2, 3, vec3(0, 0, 1));
     Quad(vertices, points, normals, 4, 0, 6, 2, vec3(0, 1, 0));
     Quad(vertices, points, normals, 4, 5, 0, 1, vec3(1, 0, 0));
     Quad(vertices, points, normals, 2, 3, 6, 7, vec3(1, 0, 1));
     Quad(vertices, points, normals, 6, 7, 4, 5, vec3(0, 1, 1));
-    Quad(vertices, points, normals, 1, 5, 3, 7, vec3(1, 1, 0 ));
+    Quad(vertices, points, normals, 1, 5, 3, 7, vec3(1, 1, 0));
 }
 
 function Quad( vertices, points, normals, v1, v2, v3, v4, normal){
@@ -171,7 +171,6 @@ function render()
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     mvMatrix = lookAt(eye, at, up);
 
-
     time += timer.getElapsedTime() / 1000;
 
     //mvMatrix = mult(mvMatrix, rotate(time * 40, [0, 1, 0]));
@@ -189,41 +188,6 @@ function render()
 
     gl.drawArrays( gl.TRIANGLES, 0, 36);
 
-    if(bulletFired)
-    {
-        positionBuffer = gl.createBuffer();
-        gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-        gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
-        normalBuffer = gl.createBuffer();
-        gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
-        gl.bufferData( gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW );
-
-        ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
-        gl.enableVertexAttribArray( ATTRIBUTE_position );
-        ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
-        gl.enableVertexAttribArray( ATTRIBUTE_normal );
-
-        gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-        gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
-        gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
-        gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
-
-
-        mvMatrix = lookAt(eye, at, up);
-        mvMatrix = mult()
-
-
-        gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
-        gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
-
-        gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
-        gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
-        gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
-        gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
-        gl.uniform1f(UNIFORM_shininess,  shininess);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 36);
-    }
 
     window.requestAnimFrame( render );
 }
