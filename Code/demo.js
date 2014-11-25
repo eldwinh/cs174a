@@ -1,9 +1,17 @@
 var canvas;
 var gl;
 var time = 0.0;
-var timer = new Timer();
+//var timer = new Timer();
+
+var index = 0;
+var bulletMovement = 0;
+var type;
+var bulletHorizontal = 0;
+var bulletVertical = 0;
 
 var UNIFORM_mvpMatrix;
+var UNIFORM_renderType;
+var bulletPosition;
 var UNIFORM_ambientProduct;
 var UNIFORM_diffuseProduct;
 var UNIFORM_specularProduct;
@@ -14,6 +22,7 @@ var ATTRIBUTE_normal;
 
 var positionBuffer; 
 var normalBuffer;
+var bBuffer;
 
 var projectionMatrix;
 var mvpMatrix;
@@ -44,21 +53,26 @@ var rotationAmount = 0;
 var bulletFired = false;
 var program;
 
+var points = [];
+
 document.addEventListener('keydown', function(event)
 {
     switch(event.keyCode)
     {
+		case 90:
+			alert("ver: "+translateUpandDown +" hor:"+translateRightandLeft);
+		break;
         case 38: //up arrow
-            translateUpandDown += .1;
+            if(translateUpandDown<0.89){translateUpandDown += .1;}
         break; 
         case 40: //down arrow
-            translateUpandDown -= .1;
+            if(translateUpandDown>-1){translateUpandDown -= .1;}
         break;
         case 39: //right arrow
-            translateRightandLeft += .1;
+            if(translateRightandLeft<0.89){translateRightandLeft += .1;}
         break;
         case 37: //left arrow
-            translateRightandLeft -= .1;
+            if(translateRightandLeft>-0.89){translateRightandLeft -= .1;}
         break;
         case 87: //w
             translateInandOut -= .1;
@@ -74,6 +88,26 @@ document.addEventListener('keydown', function(event)
         break;
         case 32:
             bulletFired = true;
+			if (index == 0 && bulletMovement == 0)
+			{
+			index = index+1;
+			bulletHorizontal = translateRightandLeft;
+			bulletVertical = translateUpandDown;
+			bBuffer = gl.createBuffer();
+			gl.bindBuffer( gl.ARRAY_BUFFER, bBuffer );
+			gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+	
+			bulletPosition = gl.getAttribLocation( program, "bulletPosition" );
+			
+			gl.vertexAttribPointer( bulletPosition, 3, gl.FLOAT, false, 0, 0 );
+			gl.enableVertexAttribArray( bulletPosition );
+			} 
+			else if(bulletMovement > 2.0)
+			{
+				bulletMovement = 0;
+				bulletHorizontal = translateRightandLeft;
+				bulletVertical = translateUpandDown;
+			}
         break;
     }
 });
@@ -89,7 +123,7 @@ window.onload = function init()
 
     gl.enable(gl.DEPTH_TEST);
 
-    var points = [];
+    points = [];
     var normals = [];
     Cube(points, normals);
 
@@ -120,10 +154,10 @@ window.onload = function init()
     UNIFORM_specularProduct = gl.getUniformLocation(program, "specularProduct");
     UNIFORM_lightPosition = gl.getUniformLocation(program, "lightPosition");
     UNIFORM_shininess = gl.getUniformLocation(program, "shininess");
-
+	UNIFORM_renderType = gl.getUniformLocation(program,"renderType");
     projectionMatrix = perspective(90, 1, 0.001, 1000);
 
-    timer.reset();
+    //timer.reset();
     gl.enable(gl.DEPTH_TEST);
 
     render();
@@ -171,7 +205,7 @@ function render()
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     mvMatrix = lookAt(eye, at, up);
 
-    time += timer.getElapsedTime() / 1000;
+    //time += timer.getElapsedTime() / 1000;
 
     //mvMatrix = mult(mvMatrix, rotate(time * 40, [0, 1, 0]));
     mvMatrix = mult(mvMatrix, rotate(rotationAmount, [0, 1, 0]));
@@ -187,6 +221,44 @@ function render()
     gl.uniform1f(UNIFORM_shininess,  shininess);
 
     gl.drawArrays( gl.TRIANGLES, 0, 36);
+	
+	if(bulletFired)
+    {
+        // positionBuffer = gl.createBuffer();
+        // gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+        // gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+        // normalBuffer = gl.createBuffer();
+        // gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+        // gl.bufferData( gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW );
+
+        // ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
+        // gl.enableVertexAttribArray( ATTRIBUTE_position );
+        // ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
+        // gl.enableVertexAttribArray( ATTRIBUTE_normal );
+
+        // gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+        // gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
+        // gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+        // gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
+
+		bulletMovement = bulletMovement + 0.01;
+		
+        mvMatrix = lookAt(eye, at, up);
+        mvMatrix = mult(mvMatrix,translate(vec3(bulletHorizontal,bulletVertical,translateInandOut-bulletMovement)));
+		mvMatrix = mult(mvMatrix, scale(vec3(0.2, 0.2, 0.2)));
+
+
+        gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
+        gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
+
+        gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
+        gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
+        gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
+        gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
+        gl.uniform1f(UNIFORM_shininess,  shininess);
+		gl.uniform1f(UNIFORM_renderType, 0.0);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
+    }
 
 
     window.requestAnimFrame( render );
