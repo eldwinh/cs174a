@@ -54,6 +54,7 @@ var bulletFired = false;
 var program;
 var textureCoord = [];
 var myTexture;
+var myTexture1;
 var lives = 3;
 
 var points = [];
@@ -122,7 +123,7 @@ window.onload = function init()
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+    gl.clearColor( 0.5, 0.5, 0.5, 1.0 );
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -180,6 +181,21 @@ window.onload = function init()
     UNIFORM_lightPosition = gl.getUniformLocation(program, "lightPosition");
     UNIFORM_shininess = gl.getUniformLocation(program, "shininess");
     UNIFORM_sampler = gl.getUniformLocation(program, "uSampler");
+	
+	myTexture1 = gl.createTexture();
+    myTexture1.image1 = new Image();
+    myTexture1.image1.onload = function(){
+        gl.bindTexture(gl.TEXTURE_2D, myTexture1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, myTexture1.image1);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    myTexture1.image1.src = "../Images/bullet.jpg";
 
     projectionMatrix = perspective(90, 1, 0.001, 1000);
 
@@ -269,7 +285,7 @@ function render()
         
         mvMatrix = lookAt(eye, at, up);
         mvMatrix = mult(mvMatrix,translate(vec3(bulletHorizontal,bulletVertical,translateInandOut-bulletMovement)));
-        mvMatrix = mult(mvMatrix, scale(vec3(0.2, 0.2, 0.2)));
+        mvMatrix = mult(mvMatrix, scale(vec3(0.3, 0.3, 0.3)));
 
         gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
         gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
@@ -279,6 +295,9 @@ function render()
         gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
         gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
         gl.uniform1f(UNIFORM_shininess,  shininess);
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, myTexture1);
+		gl.uniform1i(UNIFORM_sampler, 0);
         gl.uniform1f(UNIFORM_renderType, 0.0);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
     }
