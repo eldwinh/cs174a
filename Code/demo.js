@@ -9,6 +9,13 @@ var type;
 var bulletHorizontal = 0;
 var bulletVertical = 0;
 
+var va = vec3(0.0, 0.0, -1.0);
+var vb = vec3(0.0, 0.942809, 0.333333);
+var vc = vec3(-0.816497, -0.471405, 0.333333);
+var vd = vec3(0.816497, -0.471405, 0.333333);
+var numAsteroids = 1;
+var translate_asteroid = vec3(0.0, 0.0, -10.0);
+
 var UNIFORM_mvpMatrix;
 var UNIFORM_renderType;
 var bulletPosition;
@@ -52,12 +59,18 @@ var translateInandOut = 0;
 var rotationAmount = 0;
 var bulletFired = false;
 var program;
-var textureCoord = [];
 var myTexture;
 var myTexture1;
+var asteroidTexture
 var lives = 3;
 
 var points = [];
+var normals = [];
+var textureCoord = [];
+
+var a_points = [];
+var a_normals = [];
+var a_uv = [];
 
 document.addEventListener('keydown', function(event)
 {
@@ -122,14 +135,13 @@ window.onload = function init()
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
-    gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.5, 0.5, 0.5, 1.0 );
+    //gl.viewport( 0, 0, canvas.width, canvas.height );
+    //gl.clearColor( 0.5, 0.5, 0.5, 1.0 );
 
     gl.enable(gl.DEPTH_TEST);
-
-    points = [];
-    var normals = [];
     Cube(points, normals, textureCoord);
+
+    createSphere(va, vb, vc, vd, 2);
 
     myTexture = gl.createTexture();
     myTexture.image = new Image();
@@ -145,6 +157,21 @@ window.onload = function init()
     }
 
     myTexture.image.src = "../Images/Spaceship.png";
+
+    asteroidTexture = gl.createTexture();
+    asteroidTexture.image = new Image();
+    asteroidTexture.image.onload = function() {
+        gl.bindTexture(gl.TEXTURE_2D, asteroidTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, asteroidTexture.image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    asteroidTexture.image.src = "../Images/asteroids.jpg";
 
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
@@ -253,6 +280,47 @@ function Quad( vertices, points, normals, textureCoord, v1, v2, v3, v4, normal){
     points.push(vertices[v2]);
 }
 
+function createSphere(a, b, c, d, n){
+    divideTriangle(a, b, c, n);
+    divideTriangle(d, c, b, n);
+    divideTriangle(a, d, b, n);
+    divideTriangle(a, c, d, n);
+};
+
+function divideTriangle(a, b, c, count){
+    if(count > 0){
+        var ab = normalize(mix(a, b, 0.5), true);
+        var ac = normalize(mix(a, c, 0.5), true);
+        var bc = normalize(mix(b, c, 0.5), true);
+        divideTriangle(a, ab, ac, count - 1);
+        divideTriangle(ab, b, bc, count - 1);
+        divideTriangle(bc, c, ac, count - 1);
+        divideTriangle(ab, bc, ac, count - 1);
+    }
+    else{
+        triangle(a, b, c);
+    }
+};
+
+function triangle(a, b, c){
+    var t1 = subtract(b, a);
+    var t2 = subtract(c, a);
+    var normal = normalize(cross(t1, t2));
+    normal = negate(vec3(normal[0], normal[1], normal[2]));
+
+    a_normals.push(normal);
+    a_normals.push(normal);
+    a_normals.push(normal);
+
+    a_uv.push(vec2(0,0));
+    a_uv.push(vec2(0,1));
+    a_uv.push(vec2(1,0));
+
+    a_points.push(a);
+    a_points.push(b);
+    a_points.push(c);
+}
+
 
 function render()
 {
@@ -260,6 +328,30 @@ function render()
     mvMatrix = lookAt(eye, at, up);
 
     //time += timer.getElapsedTime() / 1000;
+
+    positionBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+    normalBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW );
+    textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(textureCoord), gl.STATIC_DRAW);
+
+    ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
+    gl.enableVertexAttribArray( ATTRIBUTE_position );
+    ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
+    gl.enableVertexAttribArray( ATTRIBUTE_normal );
+    ATTRIBUTE_textureCoord = gl.getAttribLocation( program, "vUV");
+    gl.enableVertexAttribArray(ATTRIBUTE_textureCoord);
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+    gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
+    gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+    gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
+    gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
 
     mvMatrix = mult(mvMatrix, rotate(rotationAmount, [0, 1, 0]));
     mvMatrix = mult(mvMatrix, translate(vec3(translateRightandLeft,translateUpandDown,translateInandOut)));
@@ -300,6 +392,47 @@ function render()
 		gl.uniform1i(UNIFORM_sampler, 0);
         gl.uniform1f(UNIFORM_renderType, 0.0);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
+    }
+
+    //asteroid rendering
+
+    positionBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(a_points), gl.STATIC_DRAW );
+    normalBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(a_normals), gl.STATIC_DRAW );
+    textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(a_uv), gl.STATIC_DRAW);
+
+    ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
+    gl.enableVertexAttribArray( ATTRIBUTE_position );
+    ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
+    gl.enableVertexAttribArray( ATTRIBUTE_normal );
+    ATTRIBUTE_textureCoord = gl.getAttribLocation( program, "vUV");
+    gl.enableVertexAttribArray(ATTRIBUTE_textureCoord);
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+    gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
+    gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+    gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
+    gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
+
+    translate_asteroid=add(translate_asteroid,vec3(0.0, 0.0, 0.05));
+
+    mvMatrix = lookAt(eye, at, up);
+    mvMatrix = mult(mvMatrix,translate(translate_asteroid));
+    gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
+    gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, asteroidTexture);
+
+    for(var i = 0; i < numAsteroids; i++) {
+        for(var j = 0; j < a_points.length; j+=3) {
+            gl.drawArrays(gl.TRIANGLES, j, 3);
+        }
     }
 
     window.requestAnimFrame( render );
