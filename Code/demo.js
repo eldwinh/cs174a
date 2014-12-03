@@ -13,8 +13,12 @@ var va = vec3(0.0, 0.0, -1.0);
 var vb = vec3(0.0, 0.942809, 0.333333);
 var vc = vec3(-0.816497, -0.471405, 0.333333);
 var vd = vec3(0.816497, -0.471405, 0.333333);
-var numAsteroids = 1;
-var translate_asteroid = vec3(0.0, 0.0, -10.0);
+var numAsteroids = 3;
+var reset_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, 0.0, -10.0)];
+var translate_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, 0.0, -10.0)];
+var move_asteroid = [vec3(0.0, 0.0, 0.05), vec3(0.0, 0.0, 0.05), vec3(0.0, 0.0, 0.05)];
+var scale_ship = vec3(0.4, 0.4, 0.4);
+var scale_asteroid = vec3(0.3, 0.3, 0.3);
 
 var UNIFORM_mvpMatrix;
 var UNIFORM_renderType;
@@ -225,6 +229,7 @@ window.onload = function init()
     myTexture1.image1.src = "../Images/bullet.jpg";
 
     projectionMatrix = perspective(90, 1, 0.001, 1000);
+    //projectionMatrix = ortho(-10, 10, -10, 10, 0.001, 1000);
 
     //timer.reset();
     gl.enable(gl.DEPTH_TEST);
@@ -355,6 +360,7 @@ function render()
 
     mvMatrix = mult(mvMatrix, rotate(rotationAmount, [0, 1, 0]));
     mvMatrix = mult(mvMatrix, translate(vec3(translateRightandLeft,translateUpandDown,translateInandOut)));
+    mvMatrix = mult(mvMatrix, scale(scale_ship));
 
     gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
     gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
@@ -377,7 +383,18 @@ function render()
         
         mvMatrix = lookAt(eye, at, up);
         mvMatrix = mult(mvMatrix,translate(vec3(bulletHorizontal,bulletVertical,translateInandOut-bulletMovement)));
-        mvMatrix = mult(mvMatrix, scale(vec3(0.3, 0.3, 0.3)));
+        mvMatrix = mult(mvMatrix, scale(vec3(0.1, 0.1, 0.1)));
+
+        for(var i = 0; i < numAsteroids; i++) {
+            if((translate_asteroid[i][2] + 0.15) > (-1*bulletMovement)
+                && (translate_asteroid[i][2] - 0.15) < (-1*bulletMovement)
+                && (translate_asteroid[i][1] - 0.25) < bulletVertical
+                && (translate_asteroid[i][1] + 0.25) > bulletVertical
+                && (translate_asteroid[i][0] - 0.25) < bulletHorizontal
+                && (translate_asteroid[i][0] + 0.25) > bulletHorizontal) {
+                alert("Collision with bullet.");
+            }
+        }
 
         gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
         gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
@@ -420,16 +437,22 @@ function render()
     gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
     gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
 
-    translate_asteroid=add(translate_asteroid,vec3(0.0, 0.0, 0.05));
-
-    mvMatrix = lookAt(eye, at, up);
-    mvMatrix = mult(mvMatrix,translate(translate_asteroid));
-    gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
-    gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, asteroidTexture);
 
     for(var i = 0; i < numAsteroids; i++) {
+        if(translate_asteroid[i][2] >= 1.0) {
+            translate_asteroid[i] = reset_asteroid[i];
+        }
+
+        translate_asteroid[i]=add(translate_asteroid[i], move_asteroid[i]);
+
+        mvMatrix = lookAt(eye, at, up);
+        mvMatrix = mult(mvMatrix,translate(translate_asteroid[i]));
+        mvMatrix = mult(mvMatrix,scale(scale_asteroid));
+        gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
+        gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
+
         for(var j = 0; j < a_points.length; j+=3) {
             gl.drawArrays(gl.TRIANGLES, j, 3);
         }
