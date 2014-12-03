@@ -9,16 +9,21 @@ var type;
 var bulletHorizontal = 0;
 var bulletVertical = 0;
 
+var score = 0;
+var lives = 3;
+
 var va = vec3(0.0, 0.0, -1.0);
 var vb = vec3(0.0, 0.942809, 0.333333);
 var vc = vec3(-0.816497, -0.471405, 0.333333);
 var vd = vec3(0.816497, -0.471405, 0.333333);
-var numAsteroids = 3;
-var reset_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, 0.0, -10.0)];
-var translate_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, 0.0, -10.0)];
-var move_asteroid = [vec3(0.0, 0.0, 0.05), vec3(0.0, 0.0, 0.05), vec3(0.0, 0.0, 0.05)];
+var numAsteroids = 5;
+//var reset_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, 0.0, -10.0)];
+var translate_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, -1.0, -10.0), vec3(0.0, 1.0, -10.0), vec3(0.0, 0.0, -10.0)];
+var move_asteroid = vec3(0.0, 0.0, 0.03);
 var scale_ship = vec3(0.4, 0.4, 0.4);
 var scale_asteroid = vec3(0.3, 0.3, 0.3);
+var bulletHit = 0;
+
 
 var UNIFORM_mvpMatrix;
 var UNIFORM_renderType;
@@ -122,12 +127,14 @@ document.addEventListener('keydown', function(event)
                 
                 gl.vertexAttribPointer( bulletPosition, 3, gl.FLOAT, false, 0, 0 );
                 gl.enableVertexAttribArray( bulletPosition );
+                bulletHit = 0;
             } 
-            else if(bulletMovement > 2.0)
+            else if(bulletMovement > 2.0 || bulletHit == 1)
             {
                 bulletMovement = 0;
                 bulletHorizontal = translateRightandLeft;
                 bulletVertical = translateUpandDown;
+                bulletHit = 0;
             }
         break;
     }
@@ -377,7 +384,7 @@ function render()
 
     gl.drawArrays( gl.TRIANGLES, 0, 36);
 
-    if(bulletFired)
+    if(bulletFired && bulletHit == 0)
     {
         bulletMovement = bulletMovement + 0.1;
         
@@ -386,13 +393,17 @@ function render()
         mvMatrix = mult(mvMatrix, scale(vec3(0.1, 0.1, 0.1)));
 
         for(var i = 0; i < numAsteroids; i++) {
-            if((translate_asteroid[i][2] + 0.15) > (-1*bulletMovement)
+            if(bulletHit == 0
+                && (translate_asteroid[i][2] + 0.15) > (-1*bulletMovement)
                 && (translate_asteroid[i][2] - 0.15) < (-1*bulletMovement)
                 && (translate_asteroid[i][1] - 0.25) < bulletVertical
                 && (translate_asteroid[i][1] + 0.25) > bulletVertical
                 && (translate_asteroid[i][0] - 0.25) < bulletHorizontal
                 && (translate_asteroid[i][0] + 0.25) > bulletHorizontal) {
-                alert("Collision with bullet.");
+                bulletHit = 1;
+                score = score + 1;
+                $('.score').html("<h3>Score: " + score + "<h3>");
+                translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() *2 - 1, -10);
             }
         }
 
@@ -441,11 +452,11 @@ function render()
     gl.bindTexture(gl.TEXTURE_2D, asteroidTexture);
 
     for(var i = 0; i < numAsteroids; i++) {
-        if(translate_asteroid[i][2] >= 1.0) {
-            translate_asteroid[i] = reset_asteroid[i];
+        if(translate_asteroid[i][2] >= 3.0) {
+            translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, -10.0);
         }
 
-        translate_asteroid[i]=add(translate_asteroid[i], move_asteroid[i]);
+        translate_asteroid[i]=add(translate_asteroid[i], move_asteroid);
 
         mvMatrix = lookAt(eye, at, up);
         mvMatrix = mult(mvMatrix,translate(translate_asteroid[i]));

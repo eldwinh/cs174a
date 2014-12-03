@@ -1,11 +1,25 @@
 <html>
 
-<p style="text-align:left;">
-    <b>Score:</b>
-    <span style="float:right;">
-        <b>Lives: <script type="text/javascript" src="demo.js">lives()</script></b>
-    </span>
-</p>
+<style>
+    .score {
+        float: left;
+    }
+    .lives {
+        float: left;
+        padding-left: 384px;
+    }
+    .app {
+        padding-top: 70px;
+    }
+</style>
+
+<div class="score">
+    <h3>Score: 0</h3>
+</div>
+
+<div class="lives">
+    <h3>Lives: 3</h3>
+</div>
 
 
 <script id="vertex-shader" type="x-shader/x-vertex">
@@ -66,11 +80,16 @@ void main()
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="demo.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+
 
 <body>
-<canvas id="gl-canvas" width="512" height="512" style="background : url(../space-background.gif)">
-Oops ... your browser doesn't support the HTML5 canvas element
-</canvas>
+<div class="app">
+    <canvas id="gl-canvas" width="512" height="512" style="background : url(../space-background.gif)">
+    Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+</div>
    
 
 
