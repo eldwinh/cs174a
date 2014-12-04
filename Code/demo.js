@@ -58,7 +58,7 @@ var specularProduct = mult(lightSpecular, materialSpecular);
 var shininess = 50;
 var lightPosition = vec3(0.0, 0.0, 0.0);
 
-var eye = vec3(0, 0.7, 1.8);
+var eye = vec3(0, 0.0, 1.8);
 var at = vec3(0, 0, 0);
 var up = vec3(0, 1, 0);
 
@@ -71,7 +71,6 @@ var program;
 var myTexture;
 var myTexture1;
 var asteroidTexture
-var lives = 3;
 
 var points = [];
 var normals = [];
@@ -80,6 +79,8 @@ var textureCoord = [];
 var a_points = [];
 var a_normals = [];
 var a_uv = [];
+
+var alertOnce = false;
 
 document.addEventListener('keydown', function(event)
 {
@@ -101,9 +102,11 @@ document.addEventListener('keydown', function(event)
             if(translateRightandLeft>-0.89){translateRightandLeft -= .1;}
         break;
         case 87: //w
-            translateInandOut -= .1;
+            if(translateInandOut > -.5)
+                translateInandOut -= .1;
         break;
         case 83: //s
+            if(translateInandOut < .9) 
             translateInandOut += .1;
         break;
         case 65: //a
@@ -187,30 +190,6 @@ window.onload = function init()
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
-    positionBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
-    normalBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW );
-    textureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(textureCoord), gl.STATIC_DRAW);
-
-    ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
-    gl.enableVertexAttribArray( ATTRIBUTE_position );
-    ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
-    gl.enableVertexAttribArray( ATTRIBUTE_normal );
-    ATTRIBUTE_textureCoord = gl.getAttribLocation( program, "vUV");
-    gl.enableVertexAttribArray(ATTRIBUTE_textureCoord);
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-    gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
-    gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
-    gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
-    gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
-    gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
-
     UNIFORM_mvMatrix = gl.getUniformLocation(program, "mvMatrix");
     UNIFORM_pMatrix = gl.getUniformLocation(program, "pMatrix");
     UNIFORM_ambientProduct = gl.getUniformLocation(program, "ambientProduct");
@@ -219,8 +198,8 @@ window.onload = function init()
     UNIFORM_lightPosition = gl.getUniformLocation(program, "lightPosition");
     UNIFORM_shininess = gl.getUniformLocation(program, "shininess");
     UNIFORM_sampler = gl.getUniformLocation(program, "uSampler");
-	
-	myTexture1 = gl.createTexture();
+    
+    myTexture1 = gl.createTexture();
     myTexture1.image1 = new Image();
     myTexture1.image1.onload = function(){
         gl.bindTexture(gl.TEXTURE_2D, myTexture1);
@@ -242,11 +221,6 @@ window.onload = function init()
     gl.enable(gl.DEPTH_TEST);
 
     render();
-}
-
-function lives()
-{
-    return lives;
 }
 
 function Cube(points, normals, textureCoord){
@@ -415,9 +389,9 @@ function render()
         gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
         gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
         gl.uniform1f(UNIFORM_shininess,  shininess);
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, myTexture1);
-		gl.uniform1i(UNIFORM_sampler, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, myTexture1);
+        gl.uniform1i(UNIFORM_sampler, 0);
         gl.uniform1f(UNIFORM_renderType, 0.0);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
     }
@@ -455,10 +429,36 @@ function render()
         if(translate_asteroid[i][2] >= 3.0) {
             translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, -10.0);
         }
-
         translate_asteroid[i]=add(translate_asteroid[i], move_asteroid);
 
         mvMatrix = lookAt(eye, at, up);
+        if( ((translate_asteroid[i][2]-.6 < translateInandOut && translate_asteroid[i][2] > translateInandOut) &&
+            (translate_asteroid[i][1] < translateUpandDown+.3 && translate_asteroid[i][1] > translateUpandDown-.3) &&
+            (translate_asteroid[i][0] < translateRightandLeft+.3 && translate_asteroid[i][0] > translateRightandLeft-.3))
+            )
+        {
+            //Notes:
+            //alert triggers 2x sometimes
+            //
+            alertOnce = true;
+            if(alertOnce)
+            {
+                alert("Oops, you lost a life!");
+                ///////////RESET EVERYTHING FOR A NEW GAME///////////////
+                translateUpandDown = 0;
+                translateRightandLeft = 0;
+                translateInandOut = 0;
+                rotationAmount = 0;
+                bulletFired = false;
+                if(lives != 0)
+                    lives = lives - 1;
+                $('.lives').html("<h3>Lives: " + lives + "<h3>");
+                if(lives == 0)
+                        return;
+                translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, 10.0);
+                alertOnce = false; 
+            }
+        }
         mvMatrix = mult(mvMatrix,translate(translate_asteroid[i]));
         mvMatrix = mult(mvMatrix,scale(scale_asteroid));
         gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
