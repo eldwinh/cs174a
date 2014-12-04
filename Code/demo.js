@@ -58,7 +58,7 @@ var specularProduct = mult(lightSpecular, materialSpecular);
 var shininess = 50;
 var lightPosition = vec3(0.0, 0.0, 0.0);
 
-var eye = vec3(0, 0.0, 1.8);
+var eye = vec3(0, 0.7, 1.8);
 var at = vec3(0, 0, 0);
 var up = vec3(0, 1, 0);
 
@@ -79,8 +79,6 @@ var textureCoord = [];
 var a_points = [];
 var a_normals = [];
 var a_uv = [];
-
-var alertOnce = false;
 
 document.addEventListener('keydown', function(event)
 {
@@ -169,7 +167,6 @@ window.onload = function init()
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
-
     myTexture.image.src = "../Images/Spaceship.png";
 
     asteroidTexture = gl.createTexture();
@@ -184,7 +181,6 @@ window.onload = function init()
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
-
     asteroidTexture.image.src = "../Images/asteroids.jpg";
 
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
@@ -211,7 +207,6 @@ window.onload = function init()
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
-
     myTexture1.image1.src = "../Images/bullet.jpg";
 
     projectionMatrix = perspective(90, 1, 0.001, 1000);
@@ -222,6 +217,7 @@ window.onload = function init()
 
     render();
 }
+
 
 function Cube(points, normals, textureCoord){
     vertices = [
@@ -397,7 +393,6 @@ function render()
     }
 
     //asteroid rendering
-
     positionBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(a_points), gl.STATIC_DRAW );
@@ -433,16 +428,10 @@ function render()
 
         mvMatrix = lookAt(eye, at, up);
         if( ((translate_asteroid[i][2]-.6 < translateInandOut && translate_asteroid[i][2] > translateInandOut) &&
-            (translate_asteroid[i][1] < translateUpandDown+.3 && translate_asteroid[i][1] > translateUpandDown-.3) &&
-            (translate_asteroid[i][0] < translateRightandLeft+.3 && translate_asteroid[i][0] > translateRightandLeft-.3))
+            (translate_asteroid[i][1]-.3 < translateUpandDown && translate_asteroid[i][1]+.3 > translateUpandDown) &&
+            (translate_asteroid[i][0]-.3 < translateRightandLeft && translate_asteroid[i][0]+.3 > translateRightandLeft))
             )
         {
-            //Notes:
-            //alert triggers 2x sometimes
-            //
-            alertOnce = true;
-            if(alertOnce)
-            {
                 alert("Oops, you lost a life!");
                 ///////////RESET EVERYTHING FOR A NEW GAME///////////////
                 translateUpandDown = 0;
@@ -455,9 +444,8 @@ function render()
                 $('.lives').html("<h3>Lives: " + lives + "<h3>");
                 if(lives == 0)
                         return;
-                translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, 10.0);
-                alertOnce = false; 
-            }
+                for( var w = 0; w < numAsteroids; w++)
+                    translate_asteroid[w] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, -10.0);
         }
         mvMatrix = mult(mvMatrix,translate(translate_asteroid[i]));
         mvMatrix = mult(mvMatrix,scale(scale_asteroid));
