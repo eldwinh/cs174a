@@ -80,10 +80,38 @@ var a_points = [];
 var a_normals = [];
 var a_uv = [];
 
+var stopGame = false;
+
+function spaceCrash()
+{
+    var spaceshipBlowUp = new Audio("../Images/bomb.wav");
+    spaceshipBlowUp.play();
+}
+
+function bulletHitSound()
+{
+    var bulletHitSound = new Audio("../Images/Bullethit.wav");
+    bulletHitSound.play();
+}
+
+function backgroundMusic()
+{
+    var background = new Audio("../Images/SSBMCorneria.wav");
+    background.play();
+}
+
+function bulletshoot()
+{
+    var bulletFire = new Audio("../Images/Bulletfire.wav");
+    bulletFire.play();
+}
+
 document.addEventListener('keydown', function(event)
 {
     switch(event.keyCode)
     {
+        case 27: //ESC for stopping the game
+            stopGame = true;
         case 90:
             alert("ver: "+translateUpandDown +" hor:"+translateRightandLeft);
         break;
@@ -120,6 +148,7 @@ document.addEventListener('keydown', function(event)
                 index = index+1;
                 bulletHorizontal = translateRightandLeft;
                 bulletVertical = translateUpandDown;
+                bulletshoot();
                 bBuffer = gl.createBuffer();
                 gl.bindBuffer( gl.ARRAY_BUFFER, bBuffer );
                 gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
@@ -133,6 +162,7 @@ document.addEventListener('keydown', function(event)
             else if(bulletMovement > 2.0 || bulletHit == 1)
             {
                 bulletMovement = 0;
+                bulletshoot();
                 bulletHorizontal = translateRightandLeft;
                 bulletVertical = translateUpandDown;
                 bulletHit = 0;
@@ -154,6 +184,8 @@ window.onload = function init()
     Cube(points, normals, textureCoord);
 
     createSphere(va, vb, vc, vd, 2);
+    
+    backgroundMusic();
 
     myTexture = gl.createTexture();
     myTexture.image = new Image();
@@ -218,6 +250,78 @@ window.onload = function init()
     render();
 }
 
+// var powerUpCoord = [];
+// var powerUpTexture = [];
+// var powerUpVertices = [
+//     vec3(.2,.2,.2),
+//     vec3(.2,-.2,.2),
+//     vec3(-.2,.2,.2),
+//     vec3(-.2,-.2,.2),
+//     vec3(.2,.2,-.2),
+//     vec3(.2,-.2,-.2),
+//     vec3(-.2,.2,-.2),
+//     vec3(-.2,-.2,-.2)
+// ];
+// var powerUpNormals = [];
+// var powerUp = 0;
+
+// function powerups(){
+//     powerUpTexture = gl.createTexture();
+//     powerUpTexture.image = new Image();
+//     powerUpTexture.image.onload = function() {
+//         gl.bindTexture(gl.TEXTURE_2D, powerUpTexture);
+//         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, powerUpTexture.image);
+//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+//         gl.generateMipmap(gl.TEXTURE_2D);
+//         gl.bindTexture(gl.TEXTURE_2D, null);
+//     }
+//     powerUpTexture.image.src = "../Images/green.png";
+
+//     positionBuffer = gl.createBuffer();
+//     gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+//     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+//     normalBuffer = gl.createBuffer();
+//     gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+//     gl.bufferData( gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW );
+//     textureCoordBuffer = gl.createBuffer();
+//     gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+//     gl.bufferData( gl.ARRAY_BUFFER, flatten(textureCoord), gl.STATIC_DRAW);
+
+//     ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
+//     gl.enableVertexAttribArray( ATTRIBUTE_position );
+//     ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
+//     gl.enableVertexAttribArray( ATTRIBUTE_normal );
+//     ATTRIBUTE_textureCoord = gl.getAttribLocation( program, "vUV");
+//     gl.enableVertexAttribArray(ATTRIBUTE_textureCoord);
+
+//     gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+//     gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
+//     gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+//     gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
+//     gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+//     gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
+
+//     mvMatrix = mult(mvMatrix, rotate(rotationAmount, [0, 1, 0]));
+//     mvMatrix = mult(mvMatrix, translate(vec3(.5,.5,-4)));
+
+//     gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
+//     gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
+
+//     gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
+//     gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
+//     gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
+//     gl.activeTexture(gl.TEXTURE0);
+//     gl.bindTexture(gl.TEXTURE_2D, powerUpTexture);
+
+//     gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
+//     gl.uniform1f(UNIFORM_shininess,  shininess);
+//     gl.uniform1i(UNIFORM_sampler, 0);
+
+//     gl.drawArrays( gl.TRIANGLES, 0, 36);
+// }
 
 function Cube(points, normals, textureCoord){
     vertices = [
@@ -370,6 +474,7 @@ function render()
                 && (translate_asteroid[i][1] + 0.25) > bulletVertical
                 && (translate_asteroid[i][0] - 0.25) < bulletHorizontal
                 && (translate_asteroid[i][0] + 0.25) > bulletHorizontal) {
+                bulletHitSound();
                 bulletHit = 1;
                 score = score + 1;
                 $('.score').html("<h3>Score: " + score + "<h3>");
@@ -432,7 +537,7 @@ function render()
             (translate_asteroid[i][0]-.3 < translateRightandLeft && translate_asteroid[i][0]+.3 > translateRightandLeft))
             )
         {
-                alert("Oops, you lost a life!");
+                spaceCrash();
                 ///////////RESET EVERYTHING FOR A NEW GAME///////////////
                 translateUpandDown = 0;
                 translateRightandLeft = 0;
@@ -457,5 +562,6 @@ function render()
         }
     }
 
-    window.requestAnimFrame( render );
+    if(!stopGame)
+        window.requestAnimFrame( render );
 }
