@@ -1,5 +1,7 @@
 <html>
 
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+
 <style>
     .score {
         float: left;
@@ -7,6 +9,7 @@
         color: white;
         background-color: black;
     }
+    
     .lives {
         float: left;
         font-family: "Monaco";
@@ -14,9 +17,23 @@
         background-color: black;
         padding-left: 346px;
     }
+
     .app {
-        padding-top: 70px;
+        padding-top: 10px;
     }
+
+    .restart {
+        position: absolute;
+        display: none;
+        top: 70px;
+        left: 50px;
+    }
+
+    .button-warning {
+        background: rgb(223, 117, 20); /* this is an orange */
+        margin-left: 120px;
+    }
+
 </style>
 
 <div class="score">
@@ -26,7 +43,7 @@
 <div class="lives">
     <h3>Lives: 3</h3>
 </div>
-
+<div style="clear: both;"></div>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec3 vPosition;
@@ -85,6 +102,23 @@ void main()
     Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
 </div>
+<div class="restart">
+    <h1>Click here to play again.</h1> <button class="button-warning pure-button">Restart</button>
+</div>
+ 
+<script type="text/javascript">
+    $("button").click(function(){
+        score = 0;
+        lives = 3;
+        numAsteroids = 5;
+        move_asteroid = vec3(0.0, 0.0, 0.03);
+        translate_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, -1.0, -10.0), vec3(0.0, 1.0, -10.0), vec3(0.0, 0.0, -10.0)];
+        $('.score').html("<h3>Score: " + score + "<h3>");
+        $('.lives').html("<h3>Lives: " + lives + "<h3>");
+        $(".app").show();
+        $(".restart").hide();
+    });
+</script>
 
 </body>
 </html>

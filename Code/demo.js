@@ -11,6 +11,7 @@ var bulletVertical = 0;
 
 var score = 0;
 var lives = 3;
+var temp_score = 0;
 
 var va = vec3(0.0, 0.0, -1.0);
 var vb = vec3(0.0, 0.942809, 0.333333);
@@ -84,7 +85,7 @@ var stopGame = false;
 
 function spaceCrash()
 {
-    var spaceshipBlowUp = new Audio("../Images/bomb.wav");
+    var spaceshipBlowUp = new Audio("../Images/Bomb.wav");
     spaceshipBlowUp.play();
 }
 
@@ -477,6 +478,13 @@ function render()
                 bulletHitSound();
                 bulletHit = 1;
                 score = score + 1;
+                temp_score++;
+                if(temp_score === 5) {
+                    numAsteroids = numAsteroids + 1;
+                    move_asteroid[2] = move_asteroid[2] + 0.01;
+                    translate_asteroid.push(vec3(Math.random() * 2 - 1, Math.random() * 2 -1, -10));
+                    temp_score = 0;
+                }
                 $('.score').html("<h3>Score: " + score + "<h3>");
                 translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() *2 - 1, -10);
             }
@@ -545,12 +553,15 @@ function render()
                 rotationAmount = 0;
                 bulletFired = false;
                 if(lives != 0)
-                    lives = lives - 1;
+                lives = lives - 1;
                 $('.lives').html("<h3>Lives: " + lives + "<h3>");
-                if(lives == 0)
-                        return;
+                if(lives == 0) {
+                    $(".app").hide();
+                    $(".restart").show();
+                }
+
                 for( var w = 0; w < numAsteroids; w++)
-                    translate_asteroid[w] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, -10.0);
+                    translate_asteroid[w] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 10);
         }
         mvMatrix = mult(mvMatrix,translate(translate_asteroid[i]));
         mvMatrix = mult(mvMatrix,scale(scale_asteroid));
@@ -562,6 +573,5 @@ function render()
         }
     }
 
-    if(!stopGame)
-        window.requestAnimFrame( render );
+    window.requestAnimFrame( render );
 }
