@@ -266,7 +266,7 @@ window.onload = function init()
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
-    powerUpTexture.image1.src = "../Images/bomb.jpeg";
+    powerUpTexture.image1.src = "../Images/bomb.jpg";
 
     projectionMatrix = perspective(90, 1, 0.001, 1000);
     //projectionMatrix = ortho(-10, 10, -10, 10, 0.001, 1000);
