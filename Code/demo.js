@@ -86,6 +86,7 @@ var stopGame = false;
 var chanceOfPowerUpAppear = false;
 var asteroidNumber = 0;
 var bombCapacity = 0;
+var tempPowerUpPosition;
 
 function spaceCrash()
 {
@@ -128,8 +129,8 @@ document.addEventListener('keydown', function(event)
                 bombCapacity--;
             }
         case 38: //up arrow
-            if(translateUpandDown < .7)
-                    translateUpandDown += .1;
+            if(translateUpandDown < .9)
+                      translateUpandDown += .1;
         break; 
         case 40: //down arrow
             if(translateUpandDown > -1)
@@ -266,7 +267,7 @@ window.onload = function init()
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
-    powerUpTexture.image1.src = "../Images/bomb.jpg";
+    powerUpTexture.image1.src = "../Images/bomb.png";
 
     projectionMatrix = perspective(90, 1, 0.001, 1000);
     //projectionMatrix = ortho(-10, 10, -10, 10, 0.001, 1000);
@@ -467,6 +468,7 @@ function render()
         mvMatrix = mult(mvMatrix,translate(vec3(bulletHorizontal,bulletVertical,translateInandOut-bulletMovement)));
         mvMatrix = mult(mvMatrix, scale(vec3(0.1, 0.1, 0.1)));
 
+        //Bullet Collision
         for(var i = 0; i < numAsteroids; i++) {
             if(bulletHit == 0
                 && (translate_asteroid[i][2] + 0.15) > (-1*bulletMovement)
@@ -486,6 +488,7 @@ function render()
                     temp_score = 0;
                 }
                 $('.score').html("<h3>Score: " + score + "<h3>");
+                tempPowerUpPosition = translate_asteroid[i];
                 translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() *2 - 1, -10);
                 if(-.5 < ((Math.random() * 2 - 1) / 2) && ((Math.random() * 2 - 1) / 2) < .5) //-.5 -> .5 100%
                 {
@@ -563,58 +566,11 @@ function render()
                     $(".app").hide();
                     $(".restart").show();
                 }
+                chanceOfPowerUpAppear = false;
                 for( var w = 0; w < numAsteroids; w++)
                     translate_asteroid[w] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 10);
         }
         mvMatrix = mult(mvMatrix,translate(translate_asteroid[i]));
-
-        if(chanceOfPowerUpAppear)
-        {
-            //////////////////////PowerUp//////////////////////////////////
-            positionBuffer = gl.createBuffer();
-            gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-            gl.bufferData( gl.ARRAY_BUFFER, flatten(points1), gl.STATIC_DRAW );
-            normalBuffer = gl.createBuffer();
-            gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
-            gl.bufferData( gl.ARRAY_BUFFER, flatten(normals1), gl.STATIC_DRAW );
-            textureCoordBuffer = gl.createBuffer();
-            gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
-            gl.bufferData( gl.ARRAY_BUFFER, flatten(textureCoord1), gl.STATIC_DRAW);
-
-            ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
-            gl.enableVertexAttribArray( ATTRIBUTE_position );
-            ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
-            gl.enableVertexAttribArray( ATTRIBUTE_normal );
-            ATTRIBUTE_textureCoord = gl.getAttribLocation( program, "vUV");
-            gl.enableVertexAttribArray(ATTRIBUTE_textureCoord);
-
-            gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-            gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
-            gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
-            gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
-            gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
-            gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
-
-            mvMatrix = mult(mvMatrix, scale(scale_ship));
-
-            gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
-            gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
-
-            gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
-            gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
-            gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, powerUpTexture);
-
-            gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
-            gl.uniform1f(UNIFORM_shininess,  shininess);
-            gl.uniform1i(UNIFORM_sampler, 0);
-
-            gl.drawArrays( gl.TRIANGLES, 0, 36);
-
-            //////////PowerUp Collision//////////
-            
-        }
 
         mvMatrix = mult(mvMatrix,scale(scale_asteroid));
         gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
@@ -623,6 +579,67 @@ function render()
         for(var j = 0; j < a_points.length; j+=3) {
             gl.drawArrays(gl.TRIANGLES, j, 3);
         }
+    }
+
+    if(chanceOfPowerUpAppear)
+    {
+        //////////////////////PowerUp//////////////////////////////////
+        positionBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(points1), gl.STATIC_DRAW );
+        normalBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(normals1), gl.STATIC_DRAW );
+        textureCoordBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(textureCoord1), gl.STATIC_DRAW);
+
+        ATTRIBUTE_position = gl.getAttribLocation( program, "vPosition" );
+        gl.enableVertexAttribArray( ATTRIBUTE_position );
+        ATTRIBUTE_normal = gl.getAttribLocation( program, "vNormal" );
+        gl.enableVertexAttribArray( ATTRIBUTE_normal );
+        ATTRIBUTE_textureCoord = gl.getAttribLocation( program, "vUV");
+        gl.enableVertexAttribArray(ATTRIBUTE_textureCoord);
+
+        gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+        gl.vertexAttribPointer( ATTRIBUTE_position, 3, gl.FLOAT, false, 0, 0 );
+        gl.bindBuffer( gl.ARRAY_BUFFER, normalBuffer );
+        gl.vertexAttribPointer( ATTRIBUTE_normal, 3, gl.FLOAT, false, 0, 0 );
+        gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
+        gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
+
+        mvMatrix = lookAt(eye, at, up);
+        mvMatrix = mult(mvMatrix, translate(tempPowerUpPosition));
+        tempPowerUpPosition = add(tempPowerUpPosition, move_asteroid);
+        mvMatrix = mult(mvMatrix, scale(vec3(1,1,1)));
+
+        if(translate_asteroid[asteroidNumber][2] >= 3.0) 
+            chanceOfPowerUpAppear = false;
+
+        gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
+        gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
+
+        gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
+        gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
+        gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, powerUpTexture);
+
+        gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
+        gl.uniform1f(UNIFORM_shininess,  shininess);
+        gl.uniform1i(UNIFORM_sampler, 0);
+
+        gl.drawArrays( gl.TRIANGLES, 0, 36);
+
+        //////////PowerUp Collision//////////
+        if( ((translate_asteroid[asteroidNumber][2]-.6 < translateInandOut && translateInandOut < translate_asteroid[asteroidNumber][2]) &&
+            (translate_asteroid[asteroidNumber][1]-.3 < translateUpandDown && translateUpandDown < translate_asteroid[asteroidNumber][1]+.3) &&
+            (translate_asteroid[asteroidNumber][0]-.3 < translateRightandLeft && translateRightandLeft < translate_asteroid[asteroidNumber][0]+.3))
+            )
+        {
+            alert("jbfdkhb");
+        }
+        
     }
 
     if(!stopGame)
