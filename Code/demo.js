@@ -84,9 +84,9 @@ var a_uv = [];
 
 var stopGame = false;
 var chanceOfPowerUpAppear = false;
-var asteroidNumber = [];
+var asteroidNumber;
 var bombCapacity = 0;
-var tempPowerUpPosition = [];
+var tempPowerUpPosition;
 var clearAndAddToScore;
 
 function spaceCrash()
@@ -127,8 +127,13 @@ document.addEventListener('keydown', function(event)
         case 66: //b
             if(bombCapacity > 0)
             {
-                clearAndAddToScore = true;
+                for(var i = 0; i < numAsteroids; i++) {
+                    translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 10);
+                }
+                score = score + numAsteroids;
+                 $('.score').html("<h3>Score: " + score + "<h3>");
                 bombCapacity--;
+                $('.bomb').html("<h3>Bombs: " + bombCapacity + "<h3>");
             }
         break;
         case 38: //up arrow
@@ -489,12 +494,14 @@ function render()
                     temp_score = 0;
                 }
                 $('.score').html("<h3>Score: " + score + "<h3>");
-                if(-.5 < ((Math.random() * 2 - 1) / 2) && ((Math.random() * 2 - 1) / 2) < .5) //-.5 -> .5 100%
+                if(-.15 < ((Math.random() * 2 - 1) / 2) && ((Math.random() * 2 - 1) / 2) < 0) //-.5 -> .5 100%
                 {
-                    chanceOfPowerUpAppear = true;
-                    asteroidNumber.push(i);
-                    tempPowerUpPosition.push(translate_asteroid[asteroidNumber[asteroidNumber.length-1]]);
-                    //alert(tempPowerUpPosition[0]);
+                    if(!chanceOfPowerUpAppear) {
+                        chanceOfPowerUpAppear = true;
+                        asteroidNumber = i;
+                        tempPowerUpPosition = translate_asteroid[asteroidNumber];
+                    }
+
                 }
                 translate_asteroid[i] = vec3(Math.random() * 2 - 1, Math.random() *2 - 1, -10);
             }
@@ -611,57 +618,47 @@ function render()
         gl.bindBuffer( gl.ARRAY_BUFFER, textureCoordBuffer);
         gl.vertexAttribPointer( ATTRIBUTE_textureCoord, 2, gl.FLOAT, false, 0, 0);
 
-        for(var q = 0; q < asteroidNumber.length; q++)
+        if(translate_asteroid[asteroidNumber][2] < 3.0) 
+            chanceOfPowerUpAppear = true;
+        else
         {
-            if(translate_asteroid[asteroidNumber[q]][2] < 3.0) 
-                chanceOfPowerUpAppear = true;
-            else
-            {
-                //Check edge cases for these
-                asteroidNumber.shift();
-                tempPowerUpPosition.shift();
-                chanceOfPowerUpAppear = false;
-            }
+            chanceOfPowerUpAppear = false;
+        }
 
-            mvMatrix = lookAt(eye, at, up);
-            mvMatrix = mult(mvMatrix, translate(tempPowerUpPosition[q]));
-            tempPowerUpPosition[q] = add(tempPowerUpPosition[q], move_asteroid);
-            mvMatrix = mult(mvMatrix, scale(vec3(1,1,1)));
+        mvMatrix = lookAt(eye, at, up);
+        mvMatrix = mult(mvMatrix, translate(tempPowerUpPosition));
+        tempPowerUpPosition = add(tempPowerUpPosition, move_asteroid);
+        mvMatrix = mult(mvMatrix, scale(vec3(1,1,1)));
 
-            gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
-            gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
+        gl.uniformMatrix4fv(UNIFORM_mvMatrix, false, flatten(mvMatrix));
+        gl.uniformMatrix4fv(UNIFORM_pMatrix, false, flatten(projectionMatrix));
 
-            gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
-            gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
-            gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, powerUpTexture);
+        gl.uniform4fv(UNIFORM_ambientProduct,  flatten(ambientProduct));
+        gl.uniform4fv(UNIFORM_diffuseProduct,  flatten(diffuseProduct));
+        gl.uniform4fv(UNIFORM_specularProduct, flatten(specularProduct));
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, powerUpTexture);
 
-            gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
-            gl.uniform1f(UNIFORM_shininess,  shininess);
-            gl.uniform1i(UNIFORM_sampler, 0);
+        gl.uniform3fv(UNIFORM_lightPosition,  flatten(lightPosition));
+        gl.uniform1f(UNIFORM_shininess,  shininess);
+        gl.uniform1i(UNIFORM_sampler, 0);
 
-            gl.drawArrays( gl.TRIANGLES, 0, 36);
+        gl.drawArrays( gl.TRIANGLES, 0, 36);
 
-            //////////PowerUp Collision//////////
-            if( ((tempPowerUpPosition[q][2]-.6 < translateInandOut && translateInandOut < tempPowerUpPosition[q][2]) &&
-                (tempPowerUpPosition[q][1]-.25 < translateUpandDown && translateUpandDown < tempPowerUpPosition[q][1]+.25) &&
-                (tempPowerUpPosition[q][0]-.25 < translateRightandLeft && translateRightandLeft < tempPowerUpPosition[q][0]+.25))
-                )
-            {
+        //////////PowerUp Collision//////////
+        if( ((tempPowerUpPosition[2]-.6 < translateInandOut && translateInandOut < tempPowerUpPosition[2]) &&
+            (tempPowerUpPosition[1]-.25 < translateUpandDown && translateUpandDown < tempPowerUpPosition[1]+.25) &&
+            (tempPowerUpPosition[0]-.25 < translateRightandLeft && translateRightandLeft < tempPowerUpPosition[0]+.25))
+            )
+        {
 
-                bombCapacity++;
-                chanceOfPowerUpAppear = false;
-                //Have to delete the object carefully from array after collision
-
-            }
+            bombCapacity++;
+            $(".bomb").html("<h3>Bombs: " + bombCapacity + "<h3>");
+            chanceOfPowerUpAppear = false;
+            //Have to delete the object carefully from array after collision
 
         }
-        
-        if(clearAndAddToScore)
-        {
-            $('.score').html("<h3>Score: " + numAsteroids + "<h3>");
-        }
+
     }
 
     if(!stopGame)

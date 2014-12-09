@@ -1,5 +1,6 @@
 <html>
 
+<title>Space Wars</title>
 <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
 
 <style>
@@ -10,12 +11,20 @@
         background-color: black;
     }
     
+    .bomb {
+        float: left;
+        font-family: "Monaco";
+        color: white;
+        background-color: black;
+        padding-left: 150px;
+    }
+
     .lives {
         float: left;
         font-family: "Monaco";
         color: white;
         background-color: black;
-        padding-left: 346px;
+        padding-left: 160px;
     }
 
     .app {
@@ -35,12 +44,17 @@
     .button-warning {
         background: rgb(223, 117, 20); /* this is an orange */
         margin-left: 120px;
+        margin-top: 20px;
     }
 
 </style>
 
 <div class="score">
     <h3>Score: 0</h3>
+</div>
+
+<div class="bomb">
+    <h3>Bombs: 0</h3>
 </div>
 
 <div class="lives">
@@ -108,7 +122,7 @@ void main()
 <div class="start">
 	<h1><strong>Space Wars</strong></h1>
 	<div class="ship-image">
-		<img src="../Images/start.png">
+		<img src="../Images/start.jpg">
 	</div>
 	<div class="button">
 		<button class="button-warning pure-button">Start</button>
@@ -119,10 +133,12 @@ void main()
     $("button").click(function(){
         score = 0;
         lives = 3;
+        bombCapacity = 0;
         numAsteroids = 5;
         move_asteroid = vec3(0.0, 0.0, 0.03);
         translate_asteroid = [vec3(1.0, 0.0, -10.0), vec3(-1.0, 0.0, -10.0), vec3(0.0, -1.0, -10.0), vec3(0.0, 1.0, -10.0), vec3(0.0, 0.0, -10.0)];
         $('.score').html("<h3>Score: " + score + "<h3>");
+        $('.bomb').html("<h3>Bombs: " + bombCapacity + "<h3>");
         $('.lives').html("<h3>Lives: " + lives + "<h3>");
         $(".app").show();
         $(".start").hide();
