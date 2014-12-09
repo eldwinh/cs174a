@@ -113,7 +113,16 @@ function bulletshoot()
     bulletFire.play();
 }
 
+function bombpickup()
+{
+    var bombpickup = new Audio("../Images/bombpickup.wav");
+    bombpickup.play();
+}
 
+function explode() {
+    var explode = new Audio("../Images/explode.wav");
+    explode.play();
+}
 document.addEventListener('keydown', function(event)
 {
     switch(event.keyCode)
@@ -133,6 +142,7 @@ document.addEventListener('keydown', function(event)
                 score = score + numAsteroids;
                  $('.score').html("<h3>Score: " + score + "<h3>");
                 bombCapacity--;
+                explode();
                 $('.bomb').html("<h3>Bombs: " + bombCapacity + "<h3>");
             }
         break;
@@ -651,7 +661,7 @@ function render()
             (tempPowerUpPosition[0]-.25 < translateRightandLeft && translateRightandLeft < tempPowerUpPosition[0]+.25))
             )
         {
-
+            bombpickup();
             bombCapacity++;
             $(".bomb").html("<h3>Bombs: " + bombCapacity + "<h3>");
             chanceOfPowerUpAppear = false;
