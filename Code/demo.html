@@ -20,14 +20,17 @@
 
     .app {
         padding-top: 10px;
+		display: none;
     }
 
-    .restart {
+    .start {
         position: absolute;
-        display: none;
         top: 70px;
-        left: 50px;
+        left: 110px;
     }
+	.ship-image {
+		padding-left: 50px;
+	}
 
     .button-warning {
         background: rgb(223, 117, 20); /* this is an orange */
@@ -102,8 +105,14 @@ void main()
     Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
 </div>
-<div class="restart">
-    <h1>Click here to play again.</h1> <button class="button-warning pure-button">Restart</button>
+<div class="start">
+	<h1><strong>Space Wars</strong></h1>
+	<div class="ship-image">
+		<img src="../Images/start.png">
+	</div>
+	<div class="button">
+		<button class="button-warning pure-button">Start</button>
+	</div>
 </div>
  
 <script type="text/javascript">
@@ -116,7 +125,7 @@ void main()
         $('.score').html("<h3>Score: " + score + "<h3>");
         $('.lives').html("<h3>Lives: " + lives + "<h3>");
         $(".app").show();
-        $(".restart").hide();
+        $(".start").hide();
     });
 </script>
 
