@@ -565,8 +565,9 @@ function render()
                     lives = lives - 1;
                 $('.lives').html("<h3>Lives: " + lives + "<h3>");
                 if(lives == 0) {
+					numAsteroids = 0;
                     $(".app").hide();
-                    $(".restart").show();
+                    $(".start").show();
                 }
                 chanceOfPowerUpAppear = false;
                 for( var w = 0; w < numAsteroids; w++)
